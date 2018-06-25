@@ -8,12 +8,18 @@ import com.lucene.store.InputStream;
 import com.lucene.store.OutputStream;
 
 final class SegmentInfos extends Vector {
-    public int counter = 0;              // used to name new segments
+
+    public int counter = 0;// doc总数量
 
     public final SegmentInfo info(int i) {
         return (SegmentInfo) elementAt(i);
     }
 
+    /**
+     * 从segments文件读取数据
+     * @param directory
+     * @throws IOException
+     */
     public final void read(Directory directory) throws IOException {
         InputStream input = directory.openFile("segments");
         try {
@@ -28,6 +34,11 @@ final class SegmentInfos extends Vector {
         }
     }
 
+    /**
+     * 写入数据到segments
+     * @param directory
+     * @throws IOException
+     */
     public final void write(Directory directory) throws IOException {
         OutputStream output = directory.createFile("segments.new");
         try {

@@ -66,8 +66,8 @@ final class TermInfosWriter {
      * Term must be lexicographically greater than all previous Terms added.
      * TermInfo pointers must be positive and greater than all previous.
      */
-    final void add(Term term, TermInfo ti)
-            throws IOException, SecurityException {
+    final void add(Term term, TermInfo ti) throws IOException, SecurityException
+    {
         if (!isIndex && term.compareTo(lastTerm) <= 0)
             throw new IOException("term out of order");
         if (ti.freqPointer < lastTi.freqPointer)
@@ -92,8 +92,8 @@ final class TermInfosWriter {
         size++;
     }
 
-    private final void writeTerm(Term term)
-            throws IOException {
+    private final void writeTerm(Term term) throws IOException
+    {
         int start = stringDifference(lastTerm.text, term.text);
         int length = term.text.length() - start;
 

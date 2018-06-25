@@ -1,89 +1,38 @@
-/* IndexWriter.java
- *
- * Copyright (c) 1997, 2000 Douglass R. Cutting.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- */
 package com.lucene.index;
 
+import com.lucene.analysis.Analyzer;
+import com.lucene.document.Document;
+import com.lucene.store.Directory;
+import com.lucene.store.InputStream;
+import com.lucene.store.OutputStream;
+import com.lucene.store.RAMDirectory;
+
 import java.io.IOException;
-import java.io.File;
 import java.io.PrintStream;
 import java.util.Vector;
 
-import com.lucene.store.Directory;
-import com.lucene.store.RAMDirectory;
-import com.lucene.store.FSDirectory;
-import com.lucene.store.InputStream;
-import com.lucene.store.OutputStream;
-import com.lucene.document.Document;
-import com.lucene.analysis.Analyzer;
-
 /**
- * An IndexWriter creates and maintains an index.
- * <p>
- * The third argument to the <a href="#IndexWriter"><b>constructor</b></a>
- * determines whether a new index is created, or whether an existing index is
- * opened for the addition of new documents.
- * <p>
- * In either case, documents are added with the <a
- * href="#addDocument"><b>addDocument</b></a> method.  When finished adding
- * documents, <a href="#close"><b>close</b></a> should be called.
- * <p>
- * If an index will not have more documents added for a while and optimal search
- * performance is desired, then the <a href="#optimize"><b>optimize</b></a>
- * method should be called before the index is closed.
+ * 精简版
  */
-
 public final class IndexWriter {
-    private Directory directory;              // where this index resides
-    private Analyzer analyzer;              // how to analyze text
 
-    private SegmentInfos segmentInfos = new SegmentInfos(); // the segments
-    private final Directory ramDirectory = new RAMDirectory(); // for temp segs
+    private Directory directory;
+    private Analyzer analyzer;
 
-    /**
-     * Constructs an IndexWriter for the index in <code>path</code>.  Text will
-     * be analyzed with <code>a</code>.  If <code>create</code> is true, then a
-     * new, empty index will be created in <code>d</code>, replacing the index
-     * already there, if any.
-     */
-    public IndexWriter(String path, Analyzer a, boolean create)
-            throws IOException {
-        this(new FSDirectory(path, create), a, create);
-    }
+    //segments缓冲区
+    private SegmentInfos segmentInfos = new SegmentInfos();
+
+    //临时的segment缓冲区
+    private final Directory ramDirectory = new RAMDirectory();
 
     /**
-     * Constructs an IndexWriter for the index in <code>path</code>.  Text will
-     * be analyzed with <code>a</code>.  If <code>create</code> is true, then a
-     * new, empty index will be created in <code>d</code>, replacing the index
-     * already there, if any.
+     * @param d
+     * @param a
+     * @param create
+     * @throws IOException
      */
-    public IndexWriter(File path, Analyzer a, boolean create)
-            throws IOException {
-        this(new FSDirectory(path, create), a, create);
-    }
+    public IndexWriter(Directory d, Analyzer a, boolean create) throws IOException {
 
-    /**
-     * Constructs an IndexWriter for the index in <code>d</code>.  Text will be
-     * analyzed with <code>a</code>.  If <code>create</code> is true, then a new,
-     * empty index will be created in <code>d</code>, replacing the index already
-     * there, if any.
-     */
-    public IndexWriter(Directory d, Analyzer a, boolean create)
-            throws IOException {
         directory = d;
         analyzer = a;
 
@@ -91,7 +40,6 @@ public final class IndexWriter {
             segmentInfos.write(directory);
         else
             segmentInfos.read(directory);
-
     }
 
     /**
@@ -127,14 +75,16 @@ public final class IndexWriter {
     public int maxFieldLength = 10000;
 
     /**
-     * Adds a document to this index.
+     * 使用入口
      */
-    public final void addDocument(Document doc) throws IOException {
-        DocumentWriter dw =
-                new DocumentWriter(ramDirectory, analyzer, maxFieldLength);
+    public final void addDocument(Document doc) throws IOException
+    {
+        DocumentWriter dw = new DocumentWriter(ramDirectory, analyzer, maxFieldLength);
         String segmentName = newSegmentName();
         dw.addDocument(segmentName, doc);
-        synchronized (this) {
+
+        synchronized (this)
+        {
             segmentInfos.addElement(new SegmentInfo(segmentName, 1, ramDirectory));
             maybeMergeSegments();
         }
@@ -247,19 +197,20 @@ public final class IndexWriter {
             // find segments smaller than current target size
             int minSegment = segmentInfos.size();
             int mergeDocs = 0;
-            while (--minSegment >= 0) {
+            while (--minSegment >= 0)
+            {
                 SegmentInfo si = segmentInfos.info(minSegment);
                 if (si.docCount >= targetMergeDocs)
                     break;
                 mergeDocs += si.docCount;
             }
 
-            if (mergeDocs >= targetMergeDocs)          // found a merge to do
+            if (mergeDocs >= targetMergeDocs)
                 mergeSegments(minSegment + 1);
             else
                 break;
 
-            targetMergeDocs *= mergeFactor;          // increase target size
+            targetMergeDocs *= mergeFactor;
         }
     }
 

@@ -35,12 +35,22 @@ final class DocumentWriter {
      */
     final void addDocument(String segment, Document doc)
             throws IOException {
-        // write field names
+        /**
+         * .fnm文件内容
+         *
+         * size() 每个doc总的Field数
+         * name:isIndexed
+         * name:isIndexed
+         * ...:...
+         */
         fieldInfos = new FieldInfos();
         fieldInfos.add(doc);
         fieldInfos.write(directory, segment + ".fnm");
 
-        // write field values
+        /**
+         * write field values
+         * 仅仅针对于isStored为true的Field.
+         */
         FieldsWriter fieldsWriter = new FieldsWriter(directory, segment, fieldInfos);
         try {
             fieldsWriter.addDocument(doc);
@@ -48,18 +58,34 @@ final class DocumentWriter {
             fieldsWriter.close();
         }
 
-        // invert doc into postingTable
-        postingTable.clear();              // clear postingTable
-        fieldLengths = new int[fieldInfos.size()];      // init fieldLengths
+        /**
+         * invert doc into postingTable
+         *
+         * generate hashmap &lt;term, posting>
+         *
+         */
+        postingTable.clear();
+        fieldLengths = new int[fieldInfos.size()];
         invertDocument(doc);
 
         // sort postingTable into an array
         Posting[] postings = sortPostingTable();
 
-        // write postings
+        /**
+         * write postings
+         *
+         * .frq
+         * .prx
+         *
+         */
         writePostings(postings, segment);
 
-        // write norms of indexed fields
+        /**
+         * write norms of indexed fields
+         *
+         * .fxxx文件
+         *
+         */
         writeNorms(doc, segment);
 
     }
@@ -77,7 +103,8 @@ final class DocumentWriter {
      */
     private final void invertDocument(Document doc) throws IOException {
         Enumeration fields = doc.fields();
-        while (fields.hasMoreElements()) {
+        while (fields.hasMoreElements())
+        {
             Field field = (Field) fields.nextElement();
             String fieldName = field.name();
             int fieldNumber = fieldInfos.fieldNumber(fieldName);
@@ -85,10 +112,12 @@ final class DocumentWriter {
             int position = fieldLengths[fieldNumber];      // position in field
 
             if (field.isIndexed()) {
-                if (!field.isTokenized()) {
-                    // un-tokenized field
+                if (!field.isTokenized())
+                {
                     addPosition(fieldName, field.stringValue(), position++);
-                } else {
+                }
+                else
+                {
                     Reader reader;              // find or make Reader
                     if (field.readerValue() != null)
                         reader = field.readerValue();
@@ -103,14 +132,16 @@ final class DocumentWriter {
                         for (Token t = stream.next(); t != null; t = stream.next())
                         {
                             addPosition(fieldName, t.termText(), position++);
+
                             if (position > maxFieldLength)
                                 break;
                         }
-                    } finally {
+                    }
+                    finally
+                    {
                         stream.close();
                     }
                 }
-
                 fieldLengths[fieldNumber] = position;      // save field length
             }
         }
@@ -138,8 +169,9 @@ final class DocumentWriter {
             }
             ti.positions[freq] = position;          // add new position
             ti.freq = freq + 1;              // update frequency
-        } else {
-            // word not seen before
+        }
+        else
+        {
             Term term = new Term(field, text, false);
             postingTable.put(term, new Posting(term, position));
         }
