@@ -9,7 +9,7 @@ import com.lucene.store.OutputStream;
 
 final class SegmentInfos extends Vector {
 
-    public int counter = 0;// doc总数量
+    public int counter = 0;// doc总数量,计数器,用来命名每个document对应的SegmentInfo的
 
     public final SegmentInfo info(int i) {
         return (SegmentInfo) elementAt(i);
@@ -36,6 +36,9 @@ final class SegmentInfos extends Vector {
 
     /**
      * 写入数据到segments
+     *
+     * 文件内容: counter|size()|docName1|docCount1|docName2|docCount2|docName3|docCount3|...|...
+     *
      * @param directory
      * @throws IOException
      */

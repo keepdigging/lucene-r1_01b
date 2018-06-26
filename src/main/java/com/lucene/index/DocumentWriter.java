@@ -63,6 +63,8 @@ final class DocumentWriter {
          *
          * generate hashmap &lt;term, posting>
          *
+         * Posting:: &lt;term, tf, position&gt;
+         *
          */
         postingTable.clear();
         fieldLengths = new int[fieldInfos.size()];

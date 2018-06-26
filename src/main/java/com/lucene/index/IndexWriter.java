@@ -22,7 +22,7 @@ public final class IndexWriter {
     //segments缓冲区
     private SegmentInfos segmentInfos = new SegmentInfos();
 
-    //临时的segment缓冲区
+    //临时的segment缓冲区: Hashtable
     private final Directory ramDirectory = new RAMDirectory();
 
     /**
@@ -79,8 +79,10 @@ public final class IndexWriter {
      */
     public final void addDocument(Document doc) throws IOException
     {
-        DocumentWriter dw = new DocumentWriter(ramDirectory, analyzer, maxFieldLength);
         String segmentName = newSegmentName();
+
+        DocumentWriter dw = new DocumentWriter(ramDirectory, analyzer, maxFieldLength);
+
         dw.addDocument(segmentName, doc);
 
         synchronized (this)
